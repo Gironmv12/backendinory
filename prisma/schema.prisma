@@ -1,0 +1,166 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+}
+
+enum ExpenseType {
+  FIJO
+  VARIABLE
+  IMPREVISTO
+}
+
+enum Period {
+  MENSUAL
+  QUINCENAL
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id             Int             @id @default(autoincrement())
+  name           String
+  email          String?         // Agregado para búsqueda rápida
+  role           UserRole        @default(USER)
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  lastLoginAt    DateTime?
+  authAccounts   AuthAccount[]
+  incomes        Income[]
+  expenses       Expense[]
+  budgets        Budget[]
+  incomeSources  IncomeSource[]
+  expenseCategories ExpenseCategory[]
+  auditLogs      AuditLog[]
+  @@unique([email])
+}
+
+model AuthAccount {
+  id            Int           @id @default(autoincrement())
+  userId        Int
+  provider      AuthProvider
+  providerId    String
+  email         String?
+  passwordHash  String?
+  lastSignInAt  DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  user          User          @relation(fields: [userId], references: [id])
+  @@unique([provider, providerId])
+  @@index([email])
+}
+
+model IncomeSource {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  userId      Int
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id])
+  incomes     Income[]
+  @@index([userId, isActive])
+}
+
+model Income {
+  id          Int        @id @default(autoincrement())
+  userId      Int
+  sourceId    Int
+  amount      Decimal    @db.Decimal(10, 2)
+  date        DateTime
+  period      Period
+  notes       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id])
+  source      IncomeSource @relation(fields: [sourceId], references: [id])
+  @@index([userId, date])
+  @@index([sourceId, date])
+}
+
+model ExpenseCategory {
+  id          Int          @id @default(autoincrement())
+  name        String
+  type        ExpenseType
+  description String?
+  userId      Int?         // null si es global
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  user        User?        @relation(fields: [userId], references: [id])
+  expenses    Expense[]
+  @@index([userId, isActive])
+}
+
+model Expense {
+  id            Int             @id @default(autoincrement())
+  userId        Int
+  categoryId    Int
+  description   String
+  amount        Decimal         @db.Decimal(10, 2)
+  date          DateTime
+  paid          Boolean         @default(false)
+  paymentDate   DateTime?
+  notes         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  user          User            @relation(fields: [userId], references: [id])
+  category      ExpenseCategory @relation(fields: [categoryId], references: [id])
+  @@index([userId, date])
+  @@index([categoryId, date])
+  @@index([paid])
+}
+
+model Budget {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  amount      Decimal   @db.Decimal(10, 2)
+  month       Int       // 1 - 12
+  year        Int
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id])
+  @@unique([userId, month, year])
+  @@index([userId, month, year])
+}
+
+// Agregar campos de auditoría y estados a los enums
+enum AuditStatus {
+  ACTIVE
+  INACTIVE
+  DELETED
+}
+
+model AuditLog {
+  id          Int       @id @default(autoincrement())
+  entityId    String
+  entityType  String
+  action      String
+  changes     Json
+  userId      Int?
+  createdAt   DateTime  @default(now())
+  user        User?     @relation(fields: [userId], references: [id])
+  @@index([entityId, entityType])
+  @@index([userId])
+}
