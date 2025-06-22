@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -38,7 +37,7 @@ enum UserRole {
 model User {
   id             Int             @id @default(autoincrement())
   name           String
-  email          String?         // Agregado para búsqueda rápida
+  email          String         // Agregado para búsqueda rápida
   role           UserRole        @default(USER)
   isActive       Boolean         @default(true)
   createdAt      DateTime        @default(now())
