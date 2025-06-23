@@ -102,7 +102,7 @@ model ExpenseCategory {
   name        String
   type        ExpenseType
   description String?
-  userId      Int?         // null si es global
+  userId      Int?         
   isActive    Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
