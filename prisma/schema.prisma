@@ -34,11 +34,21 @@ enum UserRole {
   ADMIN
 }
 
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  ERROR
+}
+
 model User {
   id             Int             @id @default(autoincrement())
   name           String
   email          String         // Agregado para búsqueda rápida
   role           UserRole        @default(USER)
+  emailVerified  Boolean         @default(false)
   isActive       Boolean         @default(true)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -57,14 +67,17 @@ model AuthAccount {
   id            Int           @id @default(autoincrement())
   userId        Int
   provider      AuthProvider
-  providerId    String
+  externalId    String
   email         String?
   passwordHash  String?
+  signInCount   Int          @default(0)
   lastSignInAt  DateTime?
+  lastIpAddress String?
+  userAgent     String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   user          User          @relation(fields: [userId], references: [id])
-  @@unique([provider, providerId])
+  @@unique([provider, externalId])
   @@index([email])
 }
 
@@ -78,6 +91,7 @@ model IncomeSource {
   updatedAt   DateTime  @updatedAt
   user        User      @relation(fields: [userId], references: [id])
   incomes     Income[]
+  @@unique([userId, name]) // Evita duplicados por usuario
   @@index([userId, isActive])
 }
 
@@ -108,6 +122,7 @@ model ExpenseCategory {
   updatedAt   DateTime     @updatedAt
   user        User?        @relation(fields: [userId], references: [id])
   expenses    Expense[]
+  @@unique([userId, name]) // Evita duplicados por usuario
   @@index([userId, isActive])
 }
 
@@ -144,18 +159,11 @@ model Budget {
   @@index([userId, month, year])
 }
 
-// Agregar campos de auditoría y estados a los enums
-enum AuditStatus {
-  ACTIVE
-  INACTIVE
-  DELETED
-}
-
 model AuditLog {
   id          Int       @id @default(autoincrement())
   entityId    String
   entityType  String
-  action      String
+  action      AuditAction
   changes     Json
   userId      Int?
   createdAt   DateTime  @default(now())

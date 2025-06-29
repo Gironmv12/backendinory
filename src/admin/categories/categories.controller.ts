@@ -3,9 +3,9 @@ import { CategoriesService } from './categories.service';
 import { ExpenseCategory } from '@prisma/client';
 import { CreateExpenseCategoryDto } from './dtos/create-categories.dto';
 import { UpdateExpenseCategoryDto } from './dtos/update-user.dto';
-import { CategoriesResponseDto } from './dtos/categories-response.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
 
+@ApiTags('expense-categories')
 @Controller('/admin/expense-categories/global')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}

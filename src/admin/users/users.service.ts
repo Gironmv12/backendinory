@@ -15,6 +15,7 @@ export class UsersService {
         email: true,
         name: true,
         role: true,
+        emailVerified: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,

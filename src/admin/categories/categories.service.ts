@@ -6,9 +6,6 @@ import { ConflictException } from '@nestjs/common';
 import { ExpenseCategory } from '@prisma/client';
 import { CreateExpenseCategoryDto } from './dtos/create-categories.dto';
 import { UpdateExpenseCategoryDto } from './dtos/update-user.dto';
-import { CategoriesResponseDto } from './dtos/categories-response.dto';
-
-
 
 @Injectable()
 export class CategoriesService {
